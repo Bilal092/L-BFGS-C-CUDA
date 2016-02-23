@@ -56,45 +56,69 @@ static integer c__11 = 11;
     *boxed = TRUE_;
 /*     Project the initial x to the easible set if necessary. */
     i__1 = *n;
+    printf("[DEBUG]: Debugging Active set\n");
+    
     for (i__ = 1; i__ <= i__1; ++i__) {
-	if (nbd[i__] > 0) {
-	    if (nbd[i__] <= 2 && x[i__] <= l[i__]) {
-		if (x[i__] < l[i__]) {
-		    *prjctd = TRUE_;
-		    x[i__] = l[i__];
-		}
-		++nbdd;
-	    } else if (nbd[i__] >= 2 && x[i__] >= u[i__]) {
-		if (x[i__] > u[i__]) {
-		    *prjctd = TRUE_;
-		    x[i__] = u[i__];
-		}
-		++nbdd;
+	if (nbd[i__] > 0)
+    {
+	    if (nbd[i__] <= 2 && x[i__] <= l[i__])
+        {
+            if (x[i__] < l[i__])
+            {
+                *prjctd = TRUE_;
+                x[i__] = l[i__];
+            }
+            ++nbdd;
+	    }
+        else if (nbd[i__] >= 2 && x[i__] >= u[i__])
+        {
+            if (x[i__] > u[i__])
+            {
+                *prjctd = TRUE_;
+                x[i__] = u[i__];
+            }
+            ++nbdd;
 	    }
 	}
+       
+        
+        
+        
 /* L10: */
     }
 /*     Initialize iwhere and assign values to cnstnd and boxed. */
     i__1 = *n;
-    for (i__ = 1; i__ <= i__1; ++i__) {
-	if (nbd[i__] != 2) {
-	    *boxed = FALSE_;
-	}
-	if (nbd[i__] == 0) {
-/*                                this variable is always free */
-	    iwhere[i__] = -1;
-/*           otherwise set x(i)=mid(x(i), u(i), l(i)). */
-	} else {
-	    *cnstnd = TRUE_;
-	    if (nbd[i__] == 2 && u[i__] - l[i__] <= 0.) {
-/*                   this variable is always fixed */
-		iwhere[i__] = 3;
-	    } else {
-		iwhere[i__] = 0;
-	    }
-	}
+    for (i__ = 1; i__ <= i__1; ++i__)
+    {
+        if (nbd[i__] != 2)
+        {
+            *boxed = FALSE_;
+        }
+        if (nbd[i__] == 0)
+        {
+            /*                                this variable is always free */
+            iwhere[i__] = -1;
+            /*           otherwise set x(i)=mid(x(i), u(i), l(i)). */
+        }
+        else
+        {
+            *cnstnd = TRUE_;
+            if (nbd[i__] == 2 && u[i__] - l[i__] <= 0.)
+            {
+                /*                   this variable is always fixed */
+                iwhere[i__] = 3;
+            }
+            else
+            {
+                iwhere[i__] = 0;
+            }
+        }
 /* L20: */
+        //Added by Tan for debugging
+        //printf("Idx [%d]:, l = %f, u = %f, x = %f, nbd = %d,iwhere = %d\n",(int)i__,l[i__],u[i__],x[i__],(int)nbd[i__] , (int)iwhere[i__]);
+        //-------------------------------------
     }
+    
     if (*iprint >= 0) {
 	if (*prjctd) {
 		printf("The initial X is infeasible. Restart with its projection\n");
@@ -198,61 +222,70 @@ static integer c__11 = 11;
     --v;
 
     /* Function Body */
-    if (*col == 0) {
-	return 0;
+    if (*col == 0)
+    {
+        return 0;
     }
 /*     PART I: solve [  D^(1/2)      O ] [ p1 ] = [ v1 ] */
 /*                   [ -L*D^(-1/2)   J ] [ p2 ]   [ v2 ]. */
 /*       solve Jp2=v2+LD^(-1)v1. */
     p[*col + 1] = v[*col + 1];
     i__1 = *col;
-    for (i__ = 2; i__ <= i__1; ++i__) {
-	i2 = *col + i__;
-	sum = 0.;
-	i__2 = i__ - 1;
-	for (k = 1; k <= i__2; ++k) {
-	    sum += sy[i__ + k * sy_dim1] * v[k] / sy[k + k * sy_dim1];
-/* L10: */
-	}
-	p[i2] = v[i2] + sum;
-/* L20: */
+    for (i__ = 2; i__ <= i__1; ++i__)
+    {
+        i2 = *col + i__;
+        sum = 0.;
+        i__2 = i__ - 1;
+        for (k = 1; k <= i__2; ++k)
+        {
+            sum += sy[i__ + k * sy_dim1] * v[k] / sy[k + k * sy_dim1];
+            /* L10: */
+        }
+        p[i2] = v[i2] + sum;
     }
+    
 /*     Solve the triangular system */
     dtrsl(&wt[wt_offset], m, col, &p[*col + 1], &c__11, info);
-    if (*info != 0) {
-	return 0;
+    if (*info != 0)
+    {
+        return 0;
     }
 /*       solve D^(1/2)p1=v1. */
     i__1 = *col;
-    for (i__ = 1; i__ <= i__1; ++i__) {
-	p[i__] = v[i__] / sqrt(sy[i__ + i__ * sy_dim1]);
-/* L30: */
+    for (i__ = 1; i__ <= i__1; ++i__)
+    {
+        p[i__] = v[i__] / sqrt(sy[i__ + i__ * sy_dim1]);
+        /* L30: */
     }
 /*     PART II: solve [ -D^(1/2)   D^(-1/2)*L'  ] [ p1 ] = [ p1 ] */
 /*                    [  0         J'           ] [ p2 ]   [ p2 ]. */
 /*       solve J^Tp2=p2. */
     dtrsl(&wt[wt_offset], m, col, &p[*col + 1], &c__1, info);
-    if (*info != 0) {
-	return 0;
+    if (*info != 0)
+    {
+        return 0;
     }
 /*       compute p1=-D^(-1/2)(p1-D^(-1/2)L'p2) */
 /*                 =-D^(-1/2)p1+D^(-1)L'p2. */
     i__1 = *col;
-    for (i__ = 1; i__ <= i__1; ++i__) {
-	p[i__] = -p[i__] / sqrt(sy[i__ + i__ * sy_dim1]);
-/* L40: */
+    for (i__ = 1; i__ <= i__1; ++i__)
+    {
+        p[i__] = -p[i__] / sqrt(sy[i__ + i__ * sy_dim1]);
+        /* L40: */
     }
     i__1 = *col;
-    for (i__ = 1; i__ <= i__1; ++i__) {
-	sum = 0.;
-	i__2 = *col;
-	for (k = i__ + 1; k <= i__2; ++k) {
-	    sum += sy[k + i__ * sy_dim1] * p[*col + k] / sy[i__ + i__ * 
-		    sy_dim1];
-/* L50: */
-	}
-	p[i__] += sum;
-/* L60: */
+    for (i__ = 1; i__ <= i__1; ++i__)
+    {
+        sum = 0.;
+        i__2 = *col;
+        for (k = i__ + 1; k <= i__2; ++k)
+        {
+            sum += sy[k + i__ * sy_dim1] * p[*col + k] / sy[i__ + i__ *
+                                                            sy_dim1];
+            /* L50: */
+        }
+        p[i__] += sum;
+        /* L60: */
     }
     return 0;
 } /* bmv */
@@ -513,6 +546,11 @@ static integer c__11 = 11;
         dcopy(n, &x[1], &c__1, &xcp[1], &c__1);
         return 0;
     }
+    
+    //Added by Tan for debugging
+    printf("[DEBUG] col = %d, m = %d, n = %d, head = %d\n",(int)*col,(int)*m,(int)*n,(int)*head);
+    
+    
     bnded = TRUE_;
     nfree = *n + 1;
     nbreak = 0;
@@ -526,121 +564,214 @@ static integer c__11 = 11;
 
     /*     We set p to zero and build it up as we determine d. */
     i__1 = col2;
-    for (i__ = 1; i__ <= i__1; ++i__) {
+    for (i__ = 1; i__ <= i__1; ++i__)
+    {
         p[i__] = 0.;
         /* L20: */
     }
+    
+    
+    
+    
+    
+    
+    
+    //Step 1, compute t and d for each of the n variables
     /*     In the following loop we determine for each variable its bound */
-    /*        status and its breakpoint, and update p accordingly. */
+    /*        status and its breakpoint, and update p accordingly. Figure out what varibles that cannot be increased or decrease with the negative direction of the gradient*/
     /*        Smallest breakpoint is identified. */
     i__1 = *n;
-    for (i__ = 1; i__ <= i__1; ++i__) {
+    for (i__ = 1; i__ <= i__1; ++i__)
+    {
         neggi = -g[i__];
-        if (iwhere[i__] != 3 && iwhere[i__] != -1) {
+        
+        //Added by Tan for debugging
+        //printf("[DEBUG] Before idx: %d, iwhere: %d, x = %f, lower bound: %f, upper bound: %f\n",(int)i__,(int)iwhere[i__],x[i__],l[i__],u[i__]);
+        
+        if (iwhere[i__] != 3 && iwhere[i__] != -1) //iwhere[i__] in {0,1,2}
+        {
             /*             if x(i) is not a constant and has bounds, */
             /*             compute the difference between x(i) and its bounds. */
-            if (nbd[i__] <= 2) {
-                tl = x[i__] - l[i__];
+            if (nbd[i__] <= 2) //If lower-bound is applied
+            {
+                tl = x[i__] - l[i__]; //This is the difference between xi and its bound
             }
-            if (nbd[i__] >= 2) {
+            if (nbd[i__] >= 2)//If upper bound is applied.
+            {
                 tu = u[i__] - x[i__];
             }
             /*           If a variable is close enough to a bound */
             /*             we treat it as at bound. */
-            xlower = nbd[i__] <= 2 && tl <= 0.;
+            
+            xlower = nbd[i__] <= 2 && tl <= 0.; //The second term can be replaced by ==? [Tan note]
             xupper = nbd[i__] >= 2 && tu <= 0.;
+           
+            
             /*              reset iwhere(i). */
-            iwhere[i__] = 0;
-            if (xlower) {
-                if (neggi <= 0.) {
-                    iwhere[i__] = 1;
+            iwhere[i__] = 0; //The variable is free to be updated and we have bounds.
+            if (xlower)//If we are at the lower bound
+            {
+                //printf("C...");//Added by Tan for debugging
+                if (neggi <= 0.)//If we can't move the variable further down to make it lower than the lower bound
+                {
+                    iwhere[i__] = 1; //telling that we need to fix the variable at LB. Updating it just make it violate the condition
                 }
-            } else if (xupper) {
-                if (neggi >= 0.) {
-                    iwhere[i__] = 2;
+                //The else part of this instruction will increase the value of the variable, set iwhere[i__]=0
+            }
+            else if (xupper)//If we are at the upper bound
+            {
+                //printf("C...");
+                if (neggi >= 0.)//We can't go up with this positive gradient
+                {
+                    iwhere[i__] = 2; //we need to fix the variable at UB
                 }
-            } else {
-                if (abs(neggi) <= 0.) {
-                    iwhere[i__] = -3;
+                //the else part will make iwhere[i__]=0, allowing the varible to reduce
+            }
+            else //If we are not at the lower bound
+            {
+                if (abs(neggi) <= 0.)//If the gradient is just 0
+                {
+                    iwhere[i__] = -3;//Feel free to update it since neggi  = 0.
                 }
+                //The else part of this will be iwhere = 0, making the iwhere[i__]=0
             }
         }
+        
+        /*
+        //Save the indices of the ti ~=0.
         pointr = *head;
-        if (iwhere[i__] != 0 && iwhere[i__] != -1) {
-            d__[i__] = 0.;
-        } else {
-            d__[i__] = neggi;
-            f1 -= neggi * neggi;
-            /*             calculate p := p - W'e_i* (g_i). */
-            i__2 = *col;
-            for (j = 1; j <= i__2; ++j) {
-                p[j] += wy[i__ + pointr * wy_dim1] * neggi;
-                p[*col + j] += ws[i__ + pointr * ws_dim1] * neggi;
-                pointr = pointr % *m + 1;
-                /* L40: */
+        if (iwhere[i__] != 0 && iwhere[i__] != -1)//1,2,-3. These variables are currently fixed.
+        {
+            d__[i__] = 0.; //Store P(x-tg)-x: difference between the new and current solution
+        }
+        else //0, -1: these are the case that we need to update the variable
+        {
+            d__[i__] = neggi; //[Tan note]: current value of the. See formula 4.2 on page 6
+            f1 -= neggi * neggi; //f'/ See the formula on page 8. This is the initialization of f'
+            //             calculate p := p - W'e_i* (g_i).
+            i__2 = *col; //*col = m
+            
+            
+            //Update p vector, which has size of 2m x 1
+            for (j = 1; j <= i__2; ++j)
+            {
+                
+                //This not the sum over the variable dimension but along each variable of the m correction. i is over n variables
+                //Note that W = [Wy Ws]: [n x 2m] => Wt = [Wyt Wst]. We did not store Wt but we store wy and ws. Each has dimension of  [n x m]
+                p[j] += wy[i__ + pointr * wy_dim1] * neggi; //Wtd. W: [n x 2m], d: [n x 1]. P: [2m x 1]. The short form for the formuala is wy[i__ + *head * n] * neggi
+                p[*col + j] += ws[i__ + pointr * ws_dim1] * neggi;//Ws here should be Wst: [m x n]
+                pointr = pointr % *m + 1;                       //Ws is stored in the column major format....
+         
             }
-            if (nbd[i__] <= 2 && nbd[i__] != 0 && neggi < 0.) {
-                /*                                 x(i) + d(i) is bounded; compute t(i). */
+            
+            
+            
+            if (nbd[i__] <= 2 && nbd[i__] != 0 && neggi < 0.) //nbd[i]=1,2
+            {
+                //                                 x(i) + d(i) is bounded; compute t(i).
                 ++nbreak;
                 iorder[nbreak] = i__;
                 t[nbreak] = tl / (-neggi);
-                if (nbreak == 1 || t[nbreak] < bkmin) {
+                if (nbreak == 1 || t[nbreak] < bkmin) //[Tan]: save the smallest break point
+                {
                     bkmin = t[nbreak];
                     ibkmin = nbreak;
                 }
-            } else if (nbd[i__] >= 2 && neggi > 0.) {
-                /*                                 x(i) + d(i) is bounded; compute t(i). */
+            }
+            else if (nbd[i__] >= 2 && neggi > 0.)//nbd[i]=2,3. The current variable i is fixed at the threshold
+            {
+                //                                 x(i) + d(i) is bounded; compute t(i).
                 ++nbreak;
                 iorder[nbreak] = i__;
                 t[nbreak] = tu / neggi;
-                if (nbreak == 1 || t[nbreak] < bkmin) {
+                if (nbreak == 1 || t[nbreak] < bkmin)
+                {
                     bkmin = t[nbreak];
                     ibkmin = nbreak;
                 }
-            } else {
-                /*                x(i) + d(i) is not bounded. */
+            }
+            else //nbd[i] = -1,-3. Free variable
+            {
+                //                x(i) + d(i) is not bounded.
                 --nfree;
                 iorder[nfree] = i__;
-                if (abs(neggi) > 0.) {
+                if (abs(neggi) > 0.)
+                {
                     bnded = FALSE_;
                 }
             }
         }
-        /* L50: */
+        */
+    
+        //Added by Tan for debugging
+        printf("[DEBUG] After: idx: %d, iwhere: %d, x = %f, xlower = %d, xupper: %d, lower bound: %f, upper bound: %f,nbd: %d\n",(int)i__,(int)iwhere[i__],x[i__],(int)xlower,(int)xupper,l[i__],u[i__],nbd[i__]);
+        
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        /* L50: */
+
     /*     The indices of the nonzero components of d are now stored */
     /*       in iorder(1),...,iorder(nbreak) and iorder(nfree),...,iorder(n). */
     /*       The smallest of the nbreak breakpoints is in t(ibkmin)=bkmin. */
-    if (*theta != 1.) {
+    
+    //---Initialization phase----
+    //[Tan note]: on entry, Bo = theta I. theta is a constant to specify the matrix B
+    if (*theta != 1.)
+    {
         /*                   complete the initialization of p for theta not= one. */
-        dscal(col, theta, &p[*col + 1], &c__1);
+        dscal(col, theta, &p[*col + 1], &c__1);//Scale the m lower elements, corresponding to Ws by theta.
     }
     /*     Initialize GCP xcp = x. */
     dcopy(n, &x[1], &c__1, &xcp[1], &c__1);
-    if (nbreak == 0 && nfree == *n + 1) {
+
+    if (nbreak == 0 && nfree == *n + 1)
+    {
         /*                  is a zero vector, return with the initial xcp as GCP. */
-        if (*iprint > 100) {
+        if (*iprint > 100)
+        {
             printf("Cauchy X = ");
             i__1 = *n;
-            for (i__ = 1; i__ <= i__1; ++i__) {
+            for (i__ = 1; i__ <= i__1; ++i__)
+            {
                 printf("%5.2e ", xcp[i__] );
             }
             printf("\n");
         }
         return 0;
     }
-    /*     Initialize c = W'(xcp - x) = 0. */
+
+/*     Initialize c = W'(xcp - x) = 0. *///Note that Wk = [Yk, theta*Sk], it has size of (n x 2m) with y(k) = g(k+1)-g(k) and s(k)=x(k+1)-x(k)
     i__1 = col2;
-    for (j = 1; j <= i__1; ++j) {
+    for (j = 1; j <= i__1; ++j)
+    {
         c__[j] = 0.;
         /* L60: */
     }
     /*     Initialize derivative f2. */
-    f2 = -(*theta) * f1;
+    f2 = -(*theta) * f1;//Note that f2 is a scalar here...First, compute -theta*f'
     f2_org__ = f2;
-    if (*col > 0) {
+
+    //Compute the second part -ptMp and update f''
+    if (*col > 0)
+    {
         bmv(m, &sy[sy_offset], &wt[wt_offset], col, &p[1], &v[1], info);
-        if (*info != 0) {
+        if (*info != 0)
+        {
             return 0;
         }
         f2 -= ddot(&col2, &v[1], &c__1, &p[1], &c__1);
@@ -648,32 +779,43 @@ static integer c__11 = 11;
     dtm = -f1 / f2;
     tsum = 0.;
     *nseg = 1;
-    if (*iprint >= 99) {
+    if (*iprint >= 99)
+    {
         printf("There are %ld breakpoints\n", nbreak );
     }
     /*     If there are no breakpoints, locate the GCP and return. */
-    if (nbreak == 0) {
+    if (nbreak == 0)
+    {
         goto L888;
     }
     nleft = nbreak;
     iter = 1;
     tj = 0.;
-    /* ------------------- the beginning of the loop ------------------------- */
-L777:
+    
+    
+    
+    
+    /* ------------------- the beginning of the loop. Go examinining interval by intervals ------------------------- */
+L777: //Use for making a loop here...
     /*     Find the next smallest breakpoint; */
     /*       compute dt = t(nleft) - t(nleft + 1). */
     tj0 = tj;
-    if (iter == 1) {
+    if (iter == 1)
+    {
         /*         Since we already have the smallest breakpoint we need not do */
         /*         heapsort yet. Often only one breakpoint is used and the */
         /*         cost of heapsort is avoided. */
         tj = bkmin;
         ibp = iorder[ibkmin];
-    } else {
-        if (iter == 2) {
+    }
+    else
+    {
+        if (iter == 2)
+        {
             /*             Replace the already used smallest breakpoint with the */
             /*             breakpoint numbered nbreak > nlast, before heapsort call. */
-            if (ibkmin != nbreak) {
+            if (ibkmin != nbreak)
+            {
                 t[ibkmin] = t[nbreak];
                 iorder[ibkmin] = iorder[nbreak];
             }
@@ -682,39 +824,58 @@ L777:
         }
         i__1 = iter - 2;
         hpsolb(&nleft, &t[1], &iorder[1], &i__1);
-        tj = t[nleft];
+        tj = t[nleft];//[Tan note]: nleft is the index of the current segment left
         ibp = iorder[nleft];
     }
-    dt = tj - tj0;
-    if (dt != 0. && *iprint >= 100) {
+
+
+
+
+    dt = tj - tj0; //Current left of the segment
+    if (dt != 0. && *iprint >= 100)
+    {
         printf("Piece %ld --f1, f2 at start point %.2e %.2e\n", *nseg, f1, f2 );
         printf("Distance to the next break point = %.2e\n", dt );
         printf("Distance to the stationary point = %.2e\n", dtm );
     }
     /*     If a minimizer is within this interval, locate the GCP and return. */
-    if (dtm < dt) {
+    if (dtm < dt)
+    {
         goto L888;
     }
     /*     Otherwise fix one variable and */
     /*       reset the corresponding component of d to zero. */
-    tsum += dt;
+    tsum += dt;//Accumulate and set the current value of the t
     --nleft;
+    
+    
     ++iter;
-    dibp = d__[ibp];
+    
+    
+    
+    dibp = d__[ibp];//[Tan note]: store gb?
     d__[ibp] = 0.;
-    if (dibp > 0.) {
-        zibp = u[ibp] - x[ibp];
-        xcp[ibp] = u[ibp];
+
+    //Compute xcp_b and zb. See p. 9
+    if (dibp > 0.)
+    {
+        zibp = u[ibp] - x[ibp];//zb
+        xcp[ibp] = u[ibp];//xcp_b
         iwhere[ibp] = 2;
-    } else {
+    }
+    else
+    {
         zibp = l[ibp] - x[ibp];
         xcp[ibp] = l[ibp];
         iwhere[ibp] = 1;
     }
-    if (*iprint >= 100) {
+
+    if (*iprint >= 100)
+    {
         printf("Variable %ld is fixed\n", ibp );
     }
-    if (nleft == 0 && nbreak == *n) {
+    if (nleft == 0 && nbreak == *n)
+    {
         /*                                             all n variables are fixed, */
         /*                                                return with xcp as GCP. */
         dtm = dt;
@@ -729,14 +890,19 @@ L777:
     /*        temporarily set f1 and f2 for col=0. */
     f1 = f1 + dt * f2 + dibp2 - *theta * dibp * zibp;
     f2 -= *theta * dibp2;
-    if (*col > 0) {
+    
+    
+    
+    if (*col > 0)
+    {
         /*                          update c = c + dt*p. */
-        daxpy(&col2, &dt, &p[1], &c__1, &c__[1], &c__1);
+        daxpy(&col2, &dt, &p[1], &c__1, &c__[1], &c__1);//[Tan note]: c__ store the value of c + dt*p. See the first algorithm of 1
         /*           choose wbp, */
         /*           the row of W corresponding to the breakpoint encountered. */
         pointr = *head;
         i__1 = *col;
-        for (j = 1; j <= i__1; ++j) {
+        for (j = 1; j <= i__1; ++j)
+        {
             wbp[j] = wy[ibp + pointr * wy_dim1];
             wbp[*col + j] = *theta * ws[ibp + pointr * ws_dim1];
             pointr = pointr % *m + 1;
@@ -744,40 +910,47 @@ L777:
         }
         /*           compute (wbp)Mc, (wbp)Mp, and (wbp)M(wbp)'. */
         bmv(m, &sy[sy_offset], &wt[wt_offset], col, &wbp[1], &v[1], info);
-        if (*info != 0) {
+        if (*info != 0)
+        {
             return 0;
         }
-        wmc = ddot(&col2, &c__[1], &c__1, &v[1], &c__1);
-        wmp = ddot(&col2, &p[1], &c__1, &v[1], &c__1);
-        wmw = ddot(&col2, &wbp[1], &c__1, &v[1], &c__1);
+        wmc = ddot(&col2, &c__[1], &c__1, &v[1], &c__1);//WbHMc
+        wmp = ddot(&col2, &p[1], &c__1, &v[1], &c__1);  //WbHMp
+        wmw = ddot(&col2, &wbp[1], &c__1, &v[1], &c__1);//WbHMWp
         /*           update p = p - dibp*wbp. */
         d__1 = -dibp;
         daxpy(&col2, &d__1, &wbp[1], &c__1, &p[1], &c__1);
         /*           complete updating f1 and f2 while col > 0. */
-        f1 += dibp * wmc;
-        f2 = f2 + dibp * 2. * wmp - dibp2 * wmw;
+        f1 += dibp * wmc; //[Tan note] f'. Some how dibp = -gb?
+        f2 = f2 + dibp * 2. * wmp - dibp2 * wmw;//[Tan note] f''
     }
     /* Computing MAX */
     d__1 = *epsmch * f2_org__;
     f2 = max(d__1,f2);
-    if (nleft > 0) {
-        dtm = -f1 / f2;
+    if (nleft > 0)
+    {
+        dtm = -f1 / f2;     //[Tan note]: -Delta t_min
         goto L777;
         /*                 to repeat the loop for unsearched intervals. */
-    } else if (bnded) {
+    }
+    else if (bnded)
+    {
         f1 = 0.;
         f2 = 0.;
         dtm = 0.;
-    } else {
+    } else
+    {
         dtm = -f1 / f2;
     }
     /* ------------------- the end of the loop ------------------------------- */
 L888:
-    if (*iprint >= 99) {
+    if (*iprint >= 99)
+    {
         printf("\nGCP found in this segment. Piece %ld --f1, f2 at start point %.2e %.2e\n", *nseg, f1, f2 );
         printf("Distance to the stationary point = %.2e\n", dtm );
     }
-    if (dtm <= 0.) {
+    if (dtm <= 0.)
+    {
         dtm = 0.;
     }
     tsum += dtm;
@@ -787,18 +960,22 @@ L888:
 L999:
     /*     Update c = c + dtm*p = W'(x^c - x) */
     /*       which will be used in computing r = Z'(B(x^c - x) + g). */
-    if (*col > 0) {
+    if (*col > 0)
+    {
         daxpy(&col2, &dtm, &p[1], &c__1, &c__[1], &c__1);
     }
-    if (*iprint > 100) {
+    if (*iprint > 100)
+    {
 
         printf("Cauchy X = ");
 	    i__1 = *n;
-	    for (i__ = 1; i__ <= i__1; ++i__) {
+	    for (i__ = 1; i__ <= i__1; ++i__)
+        {
 		    printf("%5.2e ", xcp[i__] );
 	    }
     }
-    if (*iprint >= 99) {
+    if (*iprint >= 99)
+    {
         printf("-------------- exit CAUCHY -----------\n");
     }
     return 0;
@@ -1778,28 +1955,45 @@ L30:
     /* Function Body */
     *sbgnrm = 0.;
     i__1 = *n;
-    for (i__ = 1; i__ <= i__1; ++i__) {
+    for (i__ = 1; i__ <= i__1; ++i__)
+    {
         gi = g[i__];
-        if (nbd[i__] != 0) {
-            if (gi < 0.) {
-                if (nbd[i__] >= 2) {
+        if (nbd[i__] != 0)
+        {
+            if (gi < 0.)
+            {
+                if (nbd[i__] >= 2)//If we have an upper bound
+                {
                     /* Computing MAX */
                     d__1 = x[i__] - u[i__];
                     gi = max(d__1,gi);
+                    //Added by Tan for clarification: gi>=d_1 => -gi<=-d_1
+                    //We have x[i__] new = x[i__]-gi<=x[i__]-d_1 = u[i]. The condition is still satisfied
                 }
-            } else {
-                if (nbd[i__] <= 2) {
+            }
+            else
+            {
+                if (nbd[i__] <= 2) //If we have a lower bound
+                {
                     /* Computing MIN */
                     d__1 = x[i__] - l[i__];
                     gi = min(d__1,gi);
+                    //Added by Tan for clarification
+                    //gi<=d_1=>-gi>=d_1=>x[i__] new>=l[i];
                 }
             }
         }
         /* Computing MAX */
-        d__1 = *sbgnrm, d__2 = abs(gi);
+        d__1 = *sbgnrm, d__2 = abs(gi); //Added by Tan - compare the current max with current value to determine the maximum value
         *sbgnrm = max(d__1,d__2);
         /* L15: */
+        
+        //Added by Tan for debugging
+        //printf("[Debug] g[%d] = %f (original), gi[%d] = %f\n",(int)i__,g[i__],(int)i__,gi);
     }
+    
+    //Added by Tan for debugging
+    //printf("[Debug] Inf norm of proj. gradient: %f\n",*sbgnrm);
     return 0;
 } /* projgr */
 

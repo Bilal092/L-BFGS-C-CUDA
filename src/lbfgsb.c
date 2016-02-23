@@ -258,34 +258,40 @@ static integer c__1 = 1;
     --isave;
     --dsave;
 
+   //Added by Tan for debugging 
+    printf("Current value of the pointer (in setlub): %p\n", x);
+    
+    //Added by Tan ---define the starting address of the matrices and the variables. All of these info are exist in the array wa
+    
+    //
     /* Function Body */
     if ( *task == START ) {
-        isave[1] = *m * *n;
+        isave[1] = *m * *n; //m*n
         /* Computing 2nd power */
         i__1 = *m;
-        isave[2] = i__1 * i__1;
+        isave[2] = i__1 * i__1;//m*m
         /* Computing 2nd power */
         i__1 = *m;
-        isave[3] = i__1 * i__1 << 2;
+        isave[3] = i__1 * i__1 << 2;//2*m*m
         isave[4] = 1;
         /* ws      m*n */
-        isave[5] = isave[4] + isave[1];
+        isave[5] = isave[4] + isave[1];//1+m*n
         /* wy      m*n */
-        isave[6] = isave[5] + isave[1];
+        isave[6] = isave[5] + isave[1];//1+2m*n
         /* wsy     m**2 */
-        isave[7] = isave[6] + isave[2];
+        isave[7] = isave[6] + isave[2];//1+2m*n+m^2;
         /* wss     m**2 */
-        isave[8] = isave[7] + isave[2];
+        isave[8] = isave[7] + isave[2];//1+2m*n+2*m^2
         /* wt      m**2 */
-        isave[9] = isave[8] + isave[2];
+        isave[9] = isave[8] + isave[2];//1+2m*n+3*m^2
         /* wn      4*m**2 */
-        isave[10] = isave[9] + isave[3];
+        isave[10] = isave[9] + isave[3];//1+2m*n+5*m^2;
         /* wsnd    4*m**2 */
-        isave[11] = isave[10] + isave[3];
+        isave[11] = isave[10] + isave[3];//1+2m*n+7*m^2;
         /* wz      n */
-        isave[12] = isave[11] + *n;
+        isave[12] = isave[11] + *n;//1+2m*n+7*m^2+n
         /* wr      n */
-        isave[13] = isave[12] + *n;
+        isave[13] = isave[12] + *n;//1+2m*n+7*m^2+n
         /* wd      n */
         isave[14] = isave[13] + *n;
         /* wt      n */
@@ -294,7 +300,7 @@ static integer c__1 = 1;
         isave[16] = isave[15] + *n;
         /* wa      8*m */
     }
-    lws = isave[4];
+    lws = isave[4];//These are the addresses of the matrices-Added by Tan
     lwy = isave[5];
     lsy = isave[6];
     lss = isave[7];
@@ -307,11 +313,60 @@ static integer c__1 = 1;
     lt = isave[14];
     lxp = isave[15];
     lwa = isave[16];
-    mainlb(n, m, &x[1], &l[1], &u[1], &nbd[1], f, &g[1], factr, pgtol, &wa[
-            lws], &wa[lwy], &wa[lsy], &wa[lss], &wa[lwt], &wa[lwn], &wa[lsnd],
-            &wa[lz], &wa[lr], &wa[ld], &wa[lt], &wa[lxp], &wa[lwa], &iwa[1], 
-            &iwa[*n + 1], &iwa[(*n << 1) + 1], task, iprint, csave, &lsave[1],
-            &isave[22], &dsave[1]); /* (ftnlen)60, (ftnlen)60); */
+    mainlb(n, m, &x[1], &l[1], &u[1], &nbd[1], f, &g[1], factr, pgtol,
+           &wa[lws], //ws, of dimension n x m, stores S, the matrix of s-vectors;
+           &wa[lwy], //wy, of dimension n x m, stores Y, the matrix of y-vectors;
+           &wa[lsy], //sy, of dimension m x m, stores S'Y;
+           &wa[lss], //ss, of dimension m x m, stores S'S;
+           &wa[lwt], // wt, of dimension m x m, stores the Cholesky factorization  of (theta*S'S+LD^(-1)L'); see eq.
+                    //(2.26) in [3].
+
+           &wa[lwn],/*is a double precision working array of dimension 2m x 2m
+                    used to store the LEL^T factorization of the indefinite matrix
+                     K = [-D -Y'ZZ'Y/theta     L_a'-R_z'  ]
+                     [L_a -R_z           theta*S'AA'S ]
+           
+                     where     E = [-I  0]
+                     [ 0  I]*/
+
+           &wa[lsnd],/* snd is a double precision working array of dimension 2m x 2m
+                      used to store the lower triangular part of
+                      N = [Y' ZZ'Y   L_a'+R_z']
+                      [L_a +R_z  S'AA'S   ] */
+           &wa[lz],/*z(n),r(n),d(n),t(n), xp(n),wa(8*m) are double precision working arrays.
+                    z  is used at different times to store the Cauchy point and
+                    the Newton point.
+                    xp is used to safeguard the projected Newton direction
+                    */
+           &wa[lr],//r(n)
+           &wa[ld],//d(n)
+           &wa[lt],//t(n)
+           &wa[lxp],//xp(n)
+           &wa[lwa],//wa(*n)
+           &iwa[1], /* index is an integer working array of dimension n.
+                     index is an integer working array of dimension n.
+                     In subroutine freev, index is used to store the free and fixed
+                     variables at the Generalized Cauchy Point (GCP), defined from the first elements of the iwa array*/
+           &iwa[*n + 1],/* iwhere is an integer working array of dimension n used to record
+                         the status of the vector x for GCP computation.
+                         iwhere(i)=0 or -3 if x(i) is free and has bounds,
+                         1       if x(i) is fixed at l(i), and l(i) .ne. u(i)
+                         2       if x(i) is fixed at u(i), and u(i) .ne. l(i)
+                         3       if x(i) is always fixed, i.e.,  u(i)=x(i)=l(i)
+                         -1       if x(i) is always free, i.e., no bounds on it.*/
+
+           &iwa[(*n << 1) + 1],/*indx2 is an integer working array of dimension n.
+                                Within subroutine cauchy, indx2 corresponds to the array iorder.
+                                In subroutine freev, a list of variables entering and leaving
+                                the free set is stored in indx2, and it is passed on to
+                                subroutine formk with this information. 
+                                */
+           task, /* task is a working string of characters of length 60 indicating */
+           iprint,
+           csave,
+           &lsave[1],
+            &isave[22],
+           &dsave[1]);
     return 0;
 } /* setulb_ */
 
@@ -457,10 +512,10 @@ static double c_b7 = 0.;
          ss, of dimension m x m, stores S'S; 
          yy, of dimension m x m, stores Y'Y; 
          wt, of dimension m x m, stores the Cholesky factorization 
-                                 of (theta*S'S+LD^(-1)L'); see eq. 
-                                 (2.26) in [3]. 
+ of (theta*S'S+LD^(-1)L'); see eq.
+ (2.26) in [3].
 
-    wn is a double precision working array of dimension 2m x 2m 
+    wn is a double precision working array of dimension 2m x 2m
       used to store the LEL^T factorization of the indefinite matrix 
                 K = [-D -Y'ZZ'Y/theta     L_a'-R_z'  ] 
                     [L_a -R_z           theta*S'AA'S ] 
@@ -565,7 +620,7 @@ static double c_b7 = 0.;
 
 /*     ************ */
     /* Parameter adjustments */
-    --indx2;
+    --indx2;  //Added by Tan - since the address of the first element is passed. We need to reduce this by 1
     --iwhere;
     --index;
     --xp;
@@ -579,7 +634,7 @@ static double c_b7 = 0.;
     --l;
     --x;
     --wa;
-    snd_dim1 = 2 * *m;
+    snd_dim1 = 2 * *m; //Added by Tan - since these matrices are 2D, this is the size of the first dimension
     snd_offset = 1 + snd_dim1;
     snd -= snd_offset;
     wn_dim1 = 2 * *m;
@@ -603,6 +658,8 @@ static double c_b7 = 0.;
     --lsave;
     --isave;
     --dsave;
+
+    printf("Current value of the pointer (in mainulb): %p\n",x);//Added by Tan for debugging
 
     /* Function Body */
     if ( *task == START ) {
@@ -652,6 +709,9 @@ static double c_b7 = 0.;
         itfile = 8;
         /* Note: no longer trying to write to file */
         /*        Check the input arguments for errors. */
+        
+        //---Added by Tan for debugging---
+        printf("[DEBUG] Enterred mainlb(), before errclb\n");
         errclb(n, m, factr, &l[1], &u[1], &nbd[1], task, &info, &k, (ftnlen)
                 60);
         if ( IS_ERROR(*task) ){
@@ -666,6 +726,12 @@ static double c_b7 = 0.;
                 &cnstnd, &boxed);
         /*        The end of the initialization. */
     } else {
+        
+        
+        //Added by Tan for debugging
+        printf("[DEBUG]Entered the second part of mainlb...\n");
+        printf("[DEBUG]Current task value: %d\n", (int)*task);
+        
         /*          restore local variables. */
         prjctd = lsave[1];
         cnstnd = lsave[2];
@@ -750,12 +816,17 @@ L222:
     iword = -1;
 
     if (! cnstnd && col > 0) {
+        
+        //Added by Tan for debugging
+        printf("[DEBUG] Calling dcopy for unconstrain optimization....\n");
         /*    skip the search for GCP. */
         dcopy(n, &x[1], &c__1, &z__[1], &c__1);
         wrk = updatd;
         nseg = 0;
         goto L333;
     }
+    
+    printf("[DEBUG] Searching for Cauchy point... \n");
     /* ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc */
 
     /*     Compute the Generalized Cauchy Point (GCP). */

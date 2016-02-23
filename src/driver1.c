@@ -254,44 +254,58 @@ int main(void)
 /*     First set bounds on the odd-numbered variables. */
     i__1 = n;
     for (i__ = 1; i__ <= i__1; i__ += 2) {
-        nbd[i__ - 1] = 2;
         l[i__ - 1] = 1.;
         u[i__ - 1] = 100.;
+    }
+    
+    for(i__=1;i__<=i__1;i__++)
+    {
+        nbd[i__ - 1] = (i__<6)?1:((i__<11)?0:2);
     }
     /*     Next set bounds on the even-numbered variables. */
     i__1 = n;
     for (i__ = 2; i__ <= i__1; i__ += 2) {
-        nbd[i__ - 1] = 2;
-        l[i__ - 1] = -100.;
+        l[i__ - 1] = 100.;
         u[i__ - 1] = 100.;
     }
     /*     We now define the starting point. */
     i__1 = n;
     for (i__ = 1; i__ <= i__1; ++i__) {
-        x[i__ - 1] = 3.;
+        x[i__ - 1] = (i__<6)?-5:300.;
         /* L14: */
     }
     printf("     Solving sample problem (Rosenbrock test fcn).\n");
     printf("      (f = 0.0 at the optimal solution.)\n");
 
+    
+    
+    printf("Current value of the pointer: %p\n", x); //Added by Tan for debugging
     /*     We start the iteration by initializing task. */
 
+    int loopbreakcount = 0;
+    
     *task = (integer)START;
 /*     s_copy(task, "START", (ftnlen)60, (ftnlen)5); */
     /*        ------- the beginning of the loop ---------- */
-L111:
+L111://The code setup a looop here by using go to this L11
     /*     This is the call to the L-BFGS-B code. */
+    
+    //---Disable by Tan for debugging---
     setulb(&n, &m, x, l, u, nbd, &f, g, &factr, &pgtol, wa, iwa, task, &
             iprint, csave, lsave, isave, dsave);
-/*     if (s_cmp(task, "FG", (ftnlen)2, (ftnlen)2) == 0) { */
-    if ( IS_FG(*task) ) {
-        /*        the minimization routine has returned to request the */
+
+    if ( IS_FG(*task) ) {//Disabled by Tan for Testing
+    //---------------------------------
+    
+      /*        the minimization routine has returned to request the */
         /*        function f and gradient g values at the current x. */
         /*        Compute function value f for the sample problem. */
         /* Computing 2nd power */
+        //f(x)=sum_over_(n_st_n>=0)([x(n)-x(n-1)^2]^2)+0.25*(x[0]-1)^2
         d__1 = x[0] - 1.;
         f = d__1 * d__1 * .25;
         i__1 = n;
+        
         for (i__ = 2; i__ <= i__1; ++i__) {
             /* Computing 2nd power */
             d__2 = x[i__ - 2];
@@ -300,6 +314,13 @@ L111:
             f += d__1 * d__1;
         }
         f *= 4.;
+        //f(x)=4*sum_over_(n_st_n>=0)([x(n)-x(n-1)^2]^2)+(x[0]-1)^2
+        
+        //Added for debugging
+        printf("Current value of the objective: %f\n",f);
+        printf("Current value of the pointer (after setulb): %p\n", x);
+        
+
         /*        Compute gradient g for the sample problem. */
         /* Computing 2nd power */
         d__1 = x[0];
@@ -315,8 +336,20 @@ L111:
             /* L22: */
         }
         g[n - 1] = t1 * 8.;
-        /*          go back to the minimization routine. */
-        goto L111;
+        
+        
+        
+        //Added by Tan for debugging
+        /*for (int printidx = 0;printidx<n;printidx++)
+        {
+            printf("[DEBUG] idx [%d]: x = %f, gfval = %f \n",(int)printidx,x[printidx],g[printidx]);
+        }*/
+        
+        //Added by Tan for debugging
+        loopbreakcount++;
+        if (loopbreakcount<2)
+            /*          go back to the minimization routine. */
+            goto L111; //Disable by Tan for debugging
     }
 
 /*     if (s_cmp(task, "NEW_X", (ftnlen)5, (ftnlen)5) == 0) { */

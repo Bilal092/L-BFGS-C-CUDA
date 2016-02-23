@@ -167,14 +167,17 @@ L40:
 
     ix = 1;
     iy = 1;
-    if (*incx < 0) {
+    if (*incx < 0)
+    {
         ix = (-(*n) + 1) * *incx + 1;
     }
-    if (*incy < 0) {
+    if (*incy < 0)
+    {
         iy = (-(*n) + 1) * *incy + 1;
     }
     i__1 = *n;
-    for (i = 1; i <= *n; ++i) {
+    for (i = 1; i <= *n; ++i)
+    {
         DY(iy) = DX(ix);
         ix += *incx;
         iy += *incy;
