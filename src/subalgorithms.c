@@ -588,6 +588,7 @@ static integer c__11 = 11;
         //Added by Tan for debugging
         //printf("[DEBUG] Before idx: %d, iwhere: %d, x = %f, lower bound: %f, upper bound: %f\n",(int)i__,(int)iwhere[i__],x[i__],l[i__],u[i__]);
         
+        //First, update iwhere for all the variables that can't be increase or decrease with negative gradient.
         if (iwhere[i__] != 3 && iwhere[i__] != -1) //iwhere[i__] in {0,1,2}
         {
             /*             if x(i) is not a constant and has bounds, */
@@ -637,14 +638,14 @@ static integer c__11 = 11;
             }
         }
         
-        /*
+        
         //Save the indices of the ti ~=0.
         pointr = *head;
-        if (iwhere[i__] != 0 && iwhere[i__] != -1)//1,2,-3. These variables are currently fixed.
+        if (iwhere[i__] != 0 && iwhere[i__] != -1)//1,2,-3. These variables are currently fixed to the lower bound/upper bound
         {
-            d__[i__] = 0.; //Store P(x-tg)-x: difference between the new and current solution
+            d__[i__] = 0.; //Store P(x-tg)-x: difference between the new and current solution. Since they can't be increased or decrease
         }
-        else //0, -1: these are the case that we need to update the variable
+        else //0, -1: these are free variables or can be updated with the negative gradient direction (active variables)
         {
             d__[i__] = neggi; //[Tan note]: current value of the. See formula 4.2 on page 6
             f1 -= neggi * neggi; //f'/ See the formula on page 8. This is the initialization of f'
@@ -652,6 +653,7 @@ static integer c__11 = 11;
             i__2 = *col; //*col = m
             
             
+            /*
             //Update p vector, which has size of 2m x 1
             for (j = 1; j <= i__2; ++j)
             {
@@ -663,14 +665,17 @@ static integer c__11 = 11;
                 pointr = pointr % *m + 1;                       //Ws is stored in the column major format....
          
             }
+            */
             
             
             
-            if (nbd[i__] <= 2 && nbd[i__] != 0 && neggi < 0.) //nbd[i]=1,2
+            if (nbd[i__] <= 2 && nbd[i__] != 0 && neggi < 0.) //nbd[i]=1,2 but neggi<0. These will affects all the vars that has iwhere = 0, tl>=0
             {
-                //                                 x(i) + d(i) is bounded; compute t(i).
+                //printf("[DEBUG] After: idx: %d, iwhere: %d, x = %f, xlower = %d, xupper: %d, lower bound: %f, upper bound: %f,nbd: %d, d__: %f, tl: %f, tu: %f \n",(int)i__,(int)iwhere[i__],x[i__],(int)xlower,(int)xupper,l[i__],u[i__],(int)nbd[i__],d__[i__],tl,tu);
+                
+                //                                 x(i) + d(i) is bounded; compute t(i). But we do not still violate the bound
                 ++nbreak;
-                iorder[nbreak] = i__;
+                iorder[nbreak] = i__;  //Add one break point
                 t[nbreak] = tl / (-neggi);
                 if (nbreak == 1 || t[nbreak] < bkmin) //[Tan]: save the smallest break point
                 {
@@ -680,6 +685,8 @@ static integer c__11 = 11;
             }
             else if (nbd[i__] >= 2 && neggi > 0.)//nbd[i]=2,3. The current variable i is fixed at the threshold
             {
+                //printf("[DEBUG] After: idx: %d, iwhere: %d, x = %f, xlower = %d, xupper: %d, lower bound: %f, upper bound: %f,nbd: %d, d__: %f, tl: %f, tu: %f \n",(int)i__,(int)iwhere[i__],x[i__],(int)xlower,(int)xupper,l[i__],u[i__],(int)nbd[i__],d__[i__],tl,tu);
+                
                 //                                 x(i) + d(i) is bounded; compute t(i).
                 ++nbreak;
                 iorder[nbreak] = i__;
@@ -690,8 +697,10 @@ static integer c__11 = 11;
                     ibkmin = nbreak;
                 }
             }
-            else //nbd[i] = -1,-3. Free variable
+            else //(neggi<0 & nbd>=2) or (neggi>0 & nnd<=2)
             {
+                printf("[DEBUG] Free: idx: %d, iwhere: %d, x = %f, xlower = %d, xupper: %d, lower bound: %f, upper bound: %f,nbd: %d, d__: %f, tl: %f, tu: %f \n",(int)i__,(int)iwhere[i__],x[i__],(int)xlower,(int)xupper,l[i__],u[i__],(int)nbd[i__],d__[i__],tl,tu);
+                
                 //                x(i) + d(i) is not bounded.
                 --nfree;
                 iorder[nfree] = i__;
@@ -701,17 +710,26 @@ static integer c__11 = 11;
                 }
             }
         }
-        */
-    
-        //Added by Tan for debugging
-        printf("[DEBUG] After: idx: %d, iwhere: %d, x = %f, xlower = %d, xupper: %d, lower bound: %f, upper bound: %f,nbd: %d\n",(int)i__,(int)iwhere[i__],x[i__],(int)xlower,(int)xupper,l[i__],u[i__],nbd[i__]);
+        
+             //Added by Tan for debugging
+       // printf("[DEBUG] After: idx: %d, iwhere: %d, x = %f, xlower = %d, xupper: %d, lower bound: %f, upper bound: %f,nbd: %d, d__: %f, \n",(int)i__,(int)iwhere[i__],x[i__],(int)xlower,(int)xupper,l[i__],u[i__],nbd[i__],d__[i__]);
         
     }
     
     
     
+    //Added by Tan for debuggin
+    //Print all information about the break points
+    printf("Number of break points: %d\n",(int)nbreak);
+    printf("Number of free variables: %d\n",(int)nfree);
+    for (int breakidx = 1;breakidx<=nbreak;breakidx++)
+    {
+        printf("Current break point idx: %d, t: %3.8f\n", breakidx,t[breakidx]);
+    }
+    printf("Min t: %3.8f at idx: %d\n", bkmin,ibkmin);
+    printf("f1: %f\n",f1);
     
-    
+
     
     
     
